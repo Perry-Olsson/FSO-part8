@@ -28,7 +28,7 @@ mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true 
 const typeDefs = gql`
   type Book {
     title: String!
-    published: Int!
+    published: Int
     author: Author!
     genres: [String!]!
     id: ID!
@@ -54,7 +54,7 @@ const typeDefs = gql`
   type Mutation {
     addBook(
       title: String!
-      published: Int!
+      published: Int
       author: String!
       genres: [String!]!
     ): Book
@@ -104,7 +104,9 @@ const resolvers = {
   },
   Mutation: {
     addBook: async (root, args, { currentUser }) => {
-      if (!currentUser) throw new AuthenticationError("not authenticated")
+      if (!currentUser) {
+        throw new AuthenticationError("not authenticated")
+      }
       let author = await Author.findOne({ name: args.author })
       try { 
         if (!author) {
@@ -121,14 +123,14 @@ const resolvers = {
         })
       }
     },
-    editAuthor: async (root, args) => {
+    editAuthor: async (root, args, { currentUser }) => {
       if (!currentUser) throw new AuthenticationError("not authenticated")
       const author = await Author.findOne({ name: args.name })
       if (!author) return null  
 
       author.born = args.setBornTo
       try { await author.save() }
-      catch (error) { throw new UserInputError(error.message, { invalidArgs: args}) }
+      catch (error) { throw new UserInputError(error.message, { invalidArgs: args }) }
       return author
     },
     createUser: (root, args) => {
@@ -140,7 +142,7 @@ const resolvers = {
     login: async (root, args) => {
       const user = await User.findOne({ username: args.username })
 
-      if (!user && args.password !== 'bigPassword') 
+      if (!user || args.password !== 'bigPassword') 
         throw new UserInputError("Wrong credentials")
 
       const userForToken = {

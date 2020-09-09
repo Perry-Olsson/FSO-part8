@@ -2,7 +2,7 @@ import React from 'react'
 import SetBirthYear from './SetBirthYear'
 
 
-const Authors = ({ show, authors }) => {
+const Authors = ({ show, authors, notify, token }) => {
 
   if (!show) {
     return null
@@ -31,7 +31,7 @@ const Authors = ({ show, authors }) => {
           )}
         </tbody>
       </table>
-      <SetBirthYear authors={authors} />
+      {token && <SetBirthYear authors={authors} notify={notify} />}
     </div>
   )
 }
