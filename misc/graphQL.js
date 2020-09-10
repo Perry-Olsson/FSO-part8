@@ -7,6 +7,7 @@ const Book = require('./models/books')
 const Author = require('./models/authors')
 const jwt = require('jsonwebtoken')
 const user = require('./models/user')
+const { PubSub } = require('apollo-server')
 require('dotenv').config()
 
 const JWT_SECRET = 'BIIIIIIG_SECRET'
@@ -79,7 +80,12 @@ const typeDefs = gql`
     allAuthors: [Author!]!
     me: User
   }
+
+  type Subscription {
+    bookAdded: Book!
+  }
 `
+const pubsub = new PubSub()
 
 const resolvers = {
   Query: {
@@ -116,6 +122,9 @@ const resolvers = {
       
         const book = new Book({ ...args, author })
         await book.save()
+
+        pubsub.publish('BOOK_ADDED', { bookAdded: book })
+
         return book
       } catch (error) {
           throw new UserInputError(error.message, {
@@ -154,6 +163,11 @@ const resolvers = {
 
       return { value: jwt.sign(userForToken, JWT_SECRET) } 
     }
+},
+Subscription: {
+  bookAdded: {
+    subscribe: () => pubsub.asyncIterator(['BOOK_ADDED'])
+  }
 }
 }
 
@@ -173,6 +187,7 @@ const server = new ApolloServer({
   }
 })
 
-server.listen().then(({ url }) => {
+server.listen().then(({ url, subscriptionsUrl }) => {
   console.log(`Server ready at ${url}`)
+  console.log(`Subscriptions ready at ${subscriptionsUrl}`)
 })

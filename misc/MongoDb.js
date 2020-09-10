@@ -46,3 +46,23 @@ if (process.argv[2] === 'emptyUsers') {
   deleteUsers()
 }
 
+if (process.argv[2] === 'reset') {
+  const deleteAll = async () => {
+    await Book.deleteMany({})
+    await Author.deleteMany({})
+  }
+  const fill = async () => {
+    for (let author of resources.authors) {
+      const newAuthor = new Author(author)
+      await newAuthor.save()
+    }
+    for (let book of resources.books){
+      const author = await Author.findOne({ name: book.author })
+      const newBook = new Book({ ...book, author})
+      await newBook.save()
+    }    
+    mongoose.connection.close()  
+  }
+  deleteAll().then(() => fill())
+}
+
