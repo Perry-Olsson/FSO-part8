@@ -31,7 +31,10 @@ if (process.argv[2] === 'fill') {
     for (let book of resources.books){
       const author = await Author.findOne({ name: book.author })
       const newBook = new Book({ ...book, author})
-      await newBook.save()
+      const savedBook = await newBook.save()
+      console.log(author.books)
+      author.books.concat(savedBook._id)
+      await author.save()
     }    
     mongoose.connection.close()  
   }
@@ -59,10 +62,12 @@ if (process.argv[2] === 'reset') {
     for (let book of resources.books){
       const author = await Author.findOne({ name: book.author })
       const newBook = new Book({ ...book, author})
-      await newBook.save()
+      const savedBook = await newBook.save()
+      author.books.push(savedBook._id)
+      await author.save()
     }    
     mongoose.connection.close()  
-  }
+  }   
   deleteAll().then(() => fill())
 }
 

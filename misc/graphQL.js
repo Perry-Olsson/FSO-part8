@@ -104,8 +104,7 @@ const resolvers = {
   },
   Author: {
     bookCount: async (root) => {
-      const result = await Book.find({ author: root.id })
-      return result.length
+      return root.books.length
     } 
   },
   Mutation: {
@@ -113,18 +112,18 @@ const resolvers = {
       if (!currentUser) {
         throw new AuthenticationError("not authenticated")
       }
-      let author = await Author.findOne({ name: args.author })
       try { 
+        let author = await Author.findOne({ name: args.author })
         if (!author) {
           author = new Author({ name: args.author })
-          await author.save()   
+          author = await author.save()
         } 
-      
         const book = new Book({ ...args, author })
-        await book.save()
+        const savedBook = await book.save()
+        author.books.push(savedBook._id)
+        await author.save()   
 
         pubsub.publish('BOOK_ADDED', { bookAdded: book })
-
         return book
       } catch (error) {
           throw new UserInputError(error.message, {
